@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -20,19 +19,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        python {
-            version "3.8"
-        }
-        ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-        }
 
+        
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -47,10 +39,3 @@ kotlin {
 flutter {
     source = "../.."
 }
-
-
-dependencies:
-  flutter_ytdlp_plugin:
-    git:
-      url: https://github.com/your-repo/flutter_ytdlp_plugin.git
-      ref: main

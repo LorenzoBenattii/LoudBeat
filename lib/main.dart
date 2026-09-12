@@ -1,17 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/main_page.dart';
 
-
 void main() {
-
-  try {
-      YtDlp.init(context);
-  } catch (YtDlpException e) {
-      Log.e("YtDlp", "Init failed", e);
-  }
-
-
-
   runApp(const MyApp());
 }
 

@@ -6,7 +6,7 @@ import 'package:loud_beat/pages/settings_page.dart';
 import 'package:loud_beat/pages/songs_page.dart';
 import 'package:loud_beat/database/database_helper.dart';
 
-
+import 'package:youtube_results/youtube_results.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -26,6 +26,10 @@ class _MainPageState extends State<MainPage> {
     SettingsPage(),
     
   ];
+  
+  final youtube = YoutubeResults();
+
+
 
 
   Future<String> askText(String text) async {
@@ -88,6 +92,22 @@ class _MainPageState extends State<MainPage> {
           IconButton( //SEARCH BUTTON
             onPressed: () async {
               String title = await askText("Enter Song Name");
+
+              List<Video>? videos = await youtube.fetchVideos(title);
+
+              print('''
+                title: ${videos?[0].title}
+                videoId: ${videos?[0].videoId}
+                duration: ${videos?[0].duration}
+                viewCount: ${videos?[0].viewCount}
+                publishedTime: ${videos?[0].publishedTime}
+                channelName: ${videos?[0].channelName}
+                channelUrl: ${videos?[0].channelUrl}
+                description: ${videos?[0].description}
+                thumbnail url: ${videos?[0].thumbnails?[0].url}
+                thumbnail height: ${videos?[0].thumbnails?[0].height}
+                thumbnail width: ${videos?[0].thumbnails?[0].width}
+                videos length : ${videos?.length}''');
               List<Song> test = await searchSongs(title);
               //TODO FINISH THIS
               
