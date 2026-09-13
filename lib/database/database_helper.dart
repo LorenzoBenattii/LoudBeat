@@ -2,12 +2,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:loud_beat/services/youtube.dart';
+import 'dart:io';
 
 
 class Song {
   final int? id;
   final String title;
-  final int length;
+  final String length;
   final String? author;
   final String filePath;
 
@@ -21,8 +23,8 @@ class Song {
     return Song(
       id: map["id"] as int,
       title: map["title"] as String,
-      author: map["author"] as String,
-      length: map["length"] as int,
+      author: map["author"] as String?,
+      length: map["length"] as String,
       filePath: map["filePath"] as String
     );
   }
@@ -65,8 +67,9 @@ Future<Database> getDatabase() async {
         CREATE TABLE songs (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           title TEXT NOT NULL,
-          artist TEXT NOT NULL,
-          filePath TEXT NOT NULL
+          author TEXT,
+          filePath TEXT NOT NULL,
+          length TEXT NOT NULL
         )
       ''');
 
@@ -102,6 +105,11 @@ Future<void> resetDatabase() async {
   final path = await getDatabasesPath();
 
   await deleteDatabase(join(path, "database.db"));
+
+  final downloadPath = await YoutubeService().getDownloadPath();
+
+  await File(downloadPath).delete();
+
 }
 
 
@@ -154,6 +162,11 @@ Future<void> deleteSong(Song song) async {
     where: "id = ?",
     whereArgs: [song.id]
   );
+
+  final downloadPath = "${YoutubeService().getDownloadPath()}/${song.title}";
+
+  await File(downloadPath).delete();
+
 }
 
 

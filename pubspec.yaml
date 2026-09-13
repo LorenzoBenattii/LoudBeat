@@ -18,6 +18,8 @@ dependencies:
   youtube_results: ^0.1.1
   cupertino_icons: ^1.0.8
   sqflite: ^2.4.3
+  path_provider: ^2.1.6
+  flutter_slidable: ^4.0.3
 
 dev_dependencies:
   flutter_test:

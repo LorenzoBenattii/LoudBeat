@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:loud_beat/pages/home_page.dart';
-
+import 'package:extractor/extractor.dart';
 
 import 'package:loud_beat/pages/settings_page.dart';
 import 'package:loud_beat/pages/songs_page.dart';
 import 'package:loud_beat/database/database_helper.dart';
 
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+
+
+
+import 'package:loud_beat/services/youtube.dart';
 import 'package:youtube_results/youtube_results.dart';
 
 
@@ -26,10 +32,10 @@ class _MainPageState extends State<MainPage> {
     SettingsPage(),
     
   ];
+
+  final YoutubeService yt = YoutubeService();
+  bool isYtReady = false;
   
-  final youtube = YoutubeResults();
-
-
 
 
   Future<String> askText(String text) async {
@@ -55,8 +61,36 @@ class _MainPageState extends State<MainPage> {
       }
     );
       
-  return result ?? "";
+    return result ?? "";
   }
+
+
+  Future<void> initializeYoutubeDL() async {
+    try {
+      await yt.initializeYoutubeDL();
+
+      if (mounted) {
+        setState(() {
+          isYtReady = true;
+        });
+      }
+
+      print("YouTube DL READY");
+    } catch (e) {
+      print("YouTube DL INITIALIZATION ERROR: $e");
+    }
+  }
+
+  
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    initializeYoutubeDL();
+  }
+
 
   
 
@@ -68,9 +102,24 @@ class _MainPageState extends State<MainPage> {
         title: const Text("LoudBeat"),
         actions: <Widget>[
           IconButton(
-            onPressed: () {
+            onPressed: isYtReady
+            ? () async {
+              String title = await askText("Enter Song Name");
+              List<Video>? videos = await yt.youtubeRes.fetchVideos(title);
 
-            }, 
+              if (videos == null || videos.isEmpty) return;
+
+              String? filePath = await yt.downloadSong(videos[0].videoId!);
+
+              Song song = Song(
+                title: videos[0].title!, 
+                length: videos[0].duration!, 
+                filePath: filePath!,
+              );
+
+              insertSong(song);
+              }
+            : null, 
             icon: Icon(
               Icons.download_outlined
             ),
@@ -79,8 +128,10 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
           IconButton( //SHUFFLE BUTTON
-            onPressed: () {
+            onPressed: () async {
               //TODO: Add shuffle function
+              List<Song>? test = await getSongs();
+              print(test.length);
             },
             icon: Icon(
               Icons.shuffle_outlined
@@ -93,7 +144,7 @@ class _MainPageState extends State<MainPage> {
             onPressed: () async {
               String title = await askText("Enter Song Name");
 
-              List<Video>? videos = await youtube.fetchVideos(title);
+              List<Video>? videos = await yt.youtubeRes.fetchVideos(title);
 
               print('''
                 title: ${videos?[0].title}

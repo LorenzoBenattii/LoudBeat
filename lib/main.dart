@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'pages/main_page.dart';
+import 'package:loud_beat/database/database_helper.dart';
+
 
 void main() {
+
+  /*
+  WidgetsFlutterBinding.ensureInitialized();
+
+  resetDatabase();
+  */
+
   runApp(const MyApp());
 }
 
