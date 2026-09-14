@@ -23,6 +23,16 @@ class YoutubeService {
     }
 
     _initialized = true;
+
+    final updateResult = await youtubeDL.updateYoutubeDL(
+      channel: UpdateChannel.stable,
+    );
+
+    if (updateResult.status == OperationStatus.success) {
+      print('yt-dlp updated to: ${updateResult.version}');
+    } else {
+      print('yt-dlp update failed: ${updateResult.errorMessage}');
+    }
     print('YouTube DL initialized successfully');
   }
 
@@ -52,8 +62,9 @@ class YoutubeService {
     final request = DownloadRequest(
       url: 'https://www.youtube.com/watch?v=$videoId',
       outputPath: downloadPath,
-      outputTemplate: '%(title)s.%(ext)s',
+      outputTemplate: videoId,
       extractAudio: true,
+      format: "bestaudio/best",
       audioFormat: 'mp3',
       audioQuality: 0,
       embedThumbnail: true,
@@ -67,7 +78,19 @@ class YoutubeService {
     print('OUTPUT PATH: ${result.outputPath}');
     print('ERROR: ${result.errorMessage}');
 
+    if (result.status != OperationStatus.success) return null;
 
-    return result.errorMessage == null ? result.outputPath : null;
+    final finalPath = '$downloadPath/$videoId.mp3';
+
+    final file = File(finalPath);
+
+    if (await file.exists()) {
+      return finalPath;
+    }
+
+    return null;
   }
 }
+
+
+final yt = YoutubeService();

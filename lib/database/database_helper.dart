@@ -12,11 +12,12 @@ class Song {
   final String length;
   final String? author;
   final String filePath;
+  final String videoId;
 
-  Song({this.id, required this.title, required this.length, this.author, required this.filePath});
+  Song({this.id, required this.title, required this.length, this.author, required this.filePath, required this.videoId});
 
   Map<String, Object?> toMap() {
-    return {"title": title, "length": length, "author": author, "filePath": filePath};
+    return {"title": title, "length": length, "author": author, "filePath": filePath, "videoId" : videoId};
   }
 
   factory Song.fromMap(Map<String, Object?> map) {
@@ -25,7 +26,8 @@ class Song {
       title: map["title"] as String,
       author: map["author"] as String?,
       length: map["length"] as String,
-      filePath: map["filePath"] as String
+      filePath: map["filePath"] as String,
+      videoId: map["videoId"] as String
     );
   }
 }
@@ -69,7 +71,8 @@ Future<Database> getDatabase() async {
           title TEXT NOT NULL,
           author TEXT,
           filePath TEXT NOT NULL,
-          length TEXT NOT NULL
+          length TEXT NOT NULL,
+          videoId TEXT NOT NULL
         )
       ''');
 
@@ -108,7 +111,11 @@ Future<void> resetDatabase() async {
 
   final downloadPath = await YoutubeService().getDownloadPath();
 
-  await File(downloadPath).delete();
+  final directory = Directory(downloadPath);
+
+  if (await directory.exists()) {
+    await directory.delete(recursive: true);
+  }
 
 }
 
@@ -157,16 +164,17 @@ Future<Song?> getSong(int songId) async {
 Future<void> deleteSong(Song song) async {
   final db = await getDatabase();
 
-  await db.delete(
-    "songs",
-    where: "id = ?",
-    whereArgs: [song.id]
+  final file = File("${await YoutubeService().getDownloadPath()}/${song.title}.mp3");
+
+  if (await file.exists()) {
+    await file.delete();
+  }
+
+  final deletedRows = await db.delete(
+    'songs',
+    where: 'id = ?',
+    whereArgs: [song.id],
   );
-
-  final downloadPath = "${YoutubeService().getDownloadPath()}/${song.title}";
-
-  await File(downloadPath).delete();
-
 }
 
 

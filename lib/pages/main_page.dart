@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:loud_beat/pages/home_page.dart';
 import 'package:extractor/extractor.dart';
 
 import 'package:loud_beat/pages/settings_page.dart';
 import 'package:loud_beat/pages/songs_page.dart';
 import 'package:loud_beat/database/database_helper.dart';
+import 'package:loud_beat/services/page_navigation.dart';
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -24,17 +26,11 @@ class MainPage extends StatefulWidget {
 
 
 class _MainPageState extends State<MainPage> {
-  int selectedPage = 0;
-
-  final List pages = [
-    HomePage(),
-    SongsPage(),
-    SettingsPage(),
-    
-  ];
-
-  final YoutubeService yt = YoutubeService();
+  
+  
   bool isYtReady = false;
+
+  final player = AudioPlayer();
   
 
 
@@ -87,7 +83,6 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-
     initializeYoutubeDL();
   }
 
@@ -97,7 +92,12 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[selectedPage],
+      body: ValueListenableBuilder<int>(
+        valueListenable: pageNavigationService.selectedPage, 
+        builder: (context, selectedPage, child) {
+          return pageNavigationService.pages[selectedPage];
+        }
+        ),
       appBar: AppBar(
         title: const Text("LoudBeat"),
         actions: <Widget>[
@@ -105,16 +105,38 @@ class _MainPageState extends State<MainPage> {
             onPressed: isYtReady
             ? () async {
               String title = await askText("Enter Song Name");
+
+              if (title == null || title.isEmpty) return;
+
               List<Video>? videos = await yt.youtubeRes.fetchVideos(title);
 
               if (videos == null || videos.isEmpty) return;
 
-              String? filePath = await yt.downloadSong(videos[0].videoId!);
 
-              Song song = Song(
+              String? filePath;
+              Video? selectedVideo;
+
+              for (final video in videos) {
+                if (video.videoId == null) continue;
+
+                filePath = await yt.downloadSong(video.videoId!);
+
+                if (filePath != null) {
+                  selectedVideo = video;
+                  break;
+                }
+              }
+
+              if (filePath == null || selectedVideo == null) {
+                print("No file was downloaded");
+                return; // No file was downloaded
+              }
+
+              final song = Song(
                 title: videos[0].title!, 
                 length: videos[0].duration!, 
                 filePath: filePath!,
+                videoId: videos[0].videoId!
               );
 
               insertSong(song);
@@ -173,44 +195,34 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
 
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedPage,
-        onDestinationSelected: (index) {
-          setState(() {
-            selectedPage = index;
-          });
+      bottomNavigationBar: ValueListenableBuilder<int>(
+        valueListenable: pageNavigationService.selectedPage,
+        builder: (context, selectedPage, child) {
+          return NavigationBar(
+            selectedIndex: selectedPage,
+            onDestinationSelected: (index) {
+              pageNavigationService.selectedPage.value = index;
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: "Home",
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.library_music_outlined),
+                selectedIcon: Icon(Icons.library_music_rounded),
+                label: "Songs",
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: "Settings",
+              ),
+            ],
+          );
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(
-              Icons.home_outlined
-            ),
-            selectedIcon: Icon(
-              Icons.home
-            ),
-            label: "Home",
-          ),
-          NavigationDestination(
-            icon: Icon(
-              Icons.library_music_outlined
-            ),
-            selectedIcon: Icon(
-              Icons.library_music_rounded
-            ),
-            label: "Songs",
-          ),
-          NavigationDestination(
-            icon: Icon(
-              Icons.settings_outlined
-            ),
-            selectedIcon: Icon(
-              Icons.settings
-            ),
-            label: "Settings",
-          ),
-        ],
       ),
-
     );
   }
 }

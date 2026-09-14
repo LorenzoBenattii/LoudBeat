@@ -3,6 +3,7 @@ import 'pages/main_page.dart';
 import 'package:loud_beat/database/database_helper.dart';
 
 
+
 void main() {
 
   /*
@@ -10,7 +11,7 @@ void main() {
 
   resetDatabase();
   */
-
+  
   runApp(const MyApp());
 }
 

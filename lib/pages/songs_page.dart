@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:loud_beat/database/database_helper.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:loud_beat/services/audio.dart';
+import 'package:loud_beat/services/page_navigation.dart';
+import 'dart:io';
 
 class SongsPage extends StatefulWidget {
   const SongsPage({super.key});
@@ -17,6 +20,7 @@ class _SongsPageState extends State<SongsPage> {
 
   Future<void> loadSongs() async {
     final loadedSongs = await getSongs();
+    await audioService;
 
     setState(() {
       songs = loadedSongs;
@@ -63,9 +67,20 @@ class _SongsPageState extends State<SongsPage> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
-                    onTap: () {
+                    onTap: () async {
+                      //await audioService.dispose();
+                      print(songs[index].filePath);
+
+                      final path = songs[index].filePath;
+                      final duration = await audioService.player.setFilePath(path);
+
+                      audioService.player.setVolume(1.0);
+                      audioService.player.play();
+
+                      pageNavigationService.selectedPage.value = 0;
 
                     },
+
                     title: Text(songs[index].title),
                     leading: const CircleAvatar(
                       child: Icon(Icons.music_note),
