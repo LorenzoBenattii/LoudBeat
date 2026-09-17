@@ -5,6 +5,7 @@ import 'package:loud_beat/pages/songs_page.dart';
 
 class PageNavigationService {
   final ValueNotifier<int> selectedPage = ValueNotifier<int>(0);
+  final ValueNotifier<bool> refreshSongs = ValueNotifier<bool>(false);
   
   final List pages = [
     HomePage(),
@@ -12,6 +13,9 @@ class PageNavigationService {
     SettingsPage()
   ];
 
+  void refreshSongsLoaded() {
+    refreshSongs.value = !refreshSongs.value;
+  }
 }
 
 final pageNavigationService = PageNavigationService();

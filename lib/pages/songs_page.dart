@@ -17,6 +17,7 @@ class SongsPage extends StatefulWidget {
 class _SongsPageState extends State<SongsPage> {
   
   List<Song> songs = [];
+  
 
   Future<void> loadSongs() async {
     final loadedSongs = await getSongs();
@@ -30,9 +31,15 @@ class _SongsPageState extends State<SongsPage> {
   @override
   void initState() {
     super.initState();
+    pageNavigationService.refreshSongs.addListener(loadSongs);
     loadSongs();
   }
 
+  @override
+  void dispose() {
+    pageNavigationService.refreshSongs.removeListener(loadSongs);
+    super.dispose();
+  }
 
 
   @override
@@ -68,14 +75,16 @@ class _SongsPageState extends State<SongsPage> {
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
                     onTap: () async {
+                      
                       //await audioService.dispose();
-                      print(songs[index].filePath);
+                      
 
-                      final path = songs[index].filePath;
-                      final duration = await audioService.player.setFilePath(path);
 
-                      audioService.player.setVolume(1.0);
-                      audioService.player.play();
+                      audioService.emptyQueue();
+                      print(audioService.queue);
+                      await audioService.addToQueue(songs[index].id!);
+                      print(audioService.queue);
+                      audioService.playNextSong();
 
                       pageNavigationService.selectedPage.value = 0;
 

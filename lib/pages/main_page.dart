@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:loud_beat/pages/home_page.dart';
 import 'package:extractor/extractor.dart';
@@ -6,7 +7,9 @@ import 'package:extractor/extractor.dart';
 import 'package:loud_beat/pages/settings_page.dart';
 import 'package:loud_beat/pages/songs_page.dart';
 import 'package:loud_beat/database/database_helper.dart';
+import 'package:loud_beat/services/audio.dart';
 import 'package:loud_beat/services/page_navigation.dart';
+import 'package:loud_beat/widgets/download_widget.dart';
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -93,108 +96,98 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ValueListenableBuilder<int>(
-        valueListenable: pageNavigationService.selectedPage, 
+        valueListenable: pageNavigationService.selectedPage,
         builder: (context, selectedPage, child) {
           return pageNavigationService.pages[selectedPage];
-        }
-        ),
+        },
+      ),
+
       appBar: AppBar(
         title: const Text("LoudBeat"),
+
         actions: <Widget>[
+          // DOWNLOAD BUTTON
           IconButton(
             onPressed: isYtReady
-            ? () async {
-              String title = await askText("Enter Song Name");
+                ? () async {
+                    String title = await askText("Enter Song Name");
+                    if (title.isEmpty) return;
+                    
+                    List<Video>? videos = await yt.youtubeRes.fetchVideos("$title lyrics");
+                    
+                    if (videos == null || videos.isEmpty) return;
 
-              if (title == null || title.isEmpty) return;
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) => DownloadWidget(),
+                    );
 
-              List<Video>? videos = await yt.youtubeRes.fetchVideos(title);
+                    String? filePath;
+                    Video? selectedVideo;
 
-              if (videos == null || videos.isEmpty) return;
+                    
+                    for (final video in videos) {
+                      if (video.videoId == null) continue;
 
+                      filePath = await yt.downloadSong(video.videoId!);
 
-              String? filePath;
-              Video? selectedVideo;
+                      if (filePath != null) {
+                        selectedVideo = video;
+                        break;
+                      }
+                    }
 
-              for (final video in videos) {
-                if (video.videoId == null) continue;
+                    if (filePath == null || selectedVideo == null) return;
 
-                filePath = await yt.downloadSong(video.videoId!);
+                    final song = Song(
+                      title: selectedVideo.title!,
+                      length: selectedVideo.duration!,
+                      filePath: filePath,
+                      videoId: selectedVideo.videoId!,
+                    );
 
-                if (filePath != null) {
-                  selectedVideo = video;
-                  break;
-                }
-              }
+                    await insertSong(song);
 
-              if (filePath == null || selectedVideo == null) {
-                print("No file was downloaded");
-                return; // No file was downloaded
-              }
-
-              final song = Song(
-                title: videos[0].title!, 
-                length: videos[0].duration!, 
-                filePath: filePath!,
-                videoId: videos[0].videoId!
-              );
-
-              insertSong(song);
-              }
-            : null, 
-            icon: Icon(
-              Icons.download_outlined
-            ),
-            selectedIcon: Icon(
-              Icons.download
-            ),
+                    pageNavigationService.refreshSongsLoaded();
+                    
+                  }
+                : null,
+            icon: const Icon(Icons.download_outlined),
+            selectedIcon: const Icon(Icons.download),
           ),
-          IconButton( //SHUFFLE BUTTON
+
+          // SHUFFLE BUTTON
+          IconButton(
             onPressed: () async {
-              //TODO: Add shuffle function
-              List<Song>? test = await getSongs();
-              print(test.length);
+              audioService.emptyQueue();
+              await audioService.shuffleQueue();
+              audioService.playNextSong();
+
+              pageNavigationService.selectedPage.value = 0;
             },
-            icon: Icon(
-              Icons.shuffle_outlined
-            ),
-            selectedIcon: Icon(
-              Icons.shuffle
-            ),
+            icon: const Icon(Icons.shuffle_outlined),
+            selectedIcon: const Icon(Icons.shuffle),
           ),
-          IconButton( //SEARCH BUTTON
+
+          // SEARCH BUTTON
+          IconButton(
             onPressed: () async {
               String title = await askText("Enter Song Name");
 
-              List<Video>? videos = await yt.youtubeRes.fetchVideos(title);
+              if (title.isEmpty) return;
 
-              print('''
-                title: ${videos?[0].title}
-                videoId: ${videos?[0].videoId}
-                duration: ${videos?[0].duration}
-                viewCount: ${videos?[0].viewCount}
-                publishedTime: ${videos?[0].publishedTime}
-                channelName: ${videos?[0].channelName}
-                channelUrl: ${videos?[0].channelUrl}
-                description: ${videos?[0].description}
-                thumbnail url: ${videos?[0].thumbnails?[0].url}
-                thumbnail height: ${videos?[0].thumbnails?[0].height}
-                thumbnail width: ${videos?[0].thumbnails?[0].width}
-                videos length : ${videos?.length}''');
-              List<Song> test = await searchSongs(title);
-              //TODO FINISH THIS
-              
-            }, 
-            icon: Icon(
-              Icons.search_outlined
-            ),
-            selectedIcon: Icon(
-              Icons.search
-            ),
+              searchSongs(title);
+
+              // TODO: Implement search functionality
+            },
+            icon: const Icon(Icons.search_outlined),
+            selectedIcon: const Icon(Icons.search),
           ),
         ],
       ),
 
+      // BOTTOM NAVIGATION BAR
       bottomNavigationBar: ValueListenableBuilder<int>(
         valueListenable: pageNavigationService.selectedPage,
         builder: (context, selectedPage, child) {

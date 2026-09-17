@@ -4,6 +4,8 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:loud_beat/services/youtube.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 
 
 class Song {
@@ -275,4 +277,14 @@ Future<List<Song>> searchSongs(String query) async {
   return results.map((map) => Song.fromMap(map)).toList();
 }
 
+Future<Uint8List?> getAlbumCover(String path) async {
+  final metadata = readMetadata(
+    File(path),
+    getImage: true
+  );
 
+  if (metadata.pictures.isEmpty) return null;
+
+  return metadata.pictures.first.bytes;
+
+}

@@ -24,12 +24,19 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
+            keepDebugSymbols += setOf(
+            "**/libffmpeg.zip.so",
+            "**/libaria2c.zip.so",
+            "**/libpython.zip.so"
+        )
         }
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

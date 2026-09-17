@@ -2,13 +2,48 @@ import 'dart:io';
 
 import 'package:extractor/extractor.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:youtube_results/youtube_results.dart';
+import 'package:youtube_results/youtube_results.dart' as res;
+import 'package:flutter/foundation.dart';
 
 class YoutubeService {
   final youtubeDL = YoutubeDLFlutter.instance;
-  final youtubeRes = YoutubeResults();
+  final youtubeRes = res.YoutubeResults();
+  
+  
+  final activeDownloads = {};
+  final downloadProgress = {};
+  final downloadState = {};
+  final downloadError = {};
 
   bool _initialized = false;
+
+  VoidCallback? onDownloadsChanged;
+
+
+  void listenToProgress() {
+    youtubeDL.onProgress.listen((progress) {
+      if (progress.progress >= 0) {
+        downloadProgress[progress.processId] = progress.progress;
+      }
+
+      onDownloadsChanged?.call();
+    });
+  }
+
+  void listenToStateChange() {
+    youtubeDL.onStateChanged.listen((state) {
+      downloadState[state.processId] = state.state;
+      onDownloadsChanged?.call();
+    });
+  }
+
+  void listenToError() {
+    youtubeDL.onError.listen((error) {
+      downloadError[error.processId] = error.error;
+      onDownloadsChanged?.call();
+    });
+  }
+
 
   Future<void> initializeYoutubeDL() async {
     final result = await youtubeDL.initialize(
@@ -34,6 +69,11 @@ class YoutubeService {
       print('yt-dlp update failed: ${updateResult.errorMessage}');
     }
     print('YouTube DL initialized successfully');
+
+
+    listenToProgress();
+    listenToError();
+    listenToStateChange();
   }
 
   Future<String> getDownloadPath() async {
@@ -55,6 +95,8 @@ class YoutubeService {
       throw Exception('YoutubeDL is not initialized');
     }
 
+    res.VideoInfo? videoInfo = await youtubeRes.fetchVideoInfo(videoId);
+
     final downloadPath = await getDownloadPath();
 
     print('DOWNLOAD PATH: $downloadPath');
@@ -72,11 +114,16 @@ class YoutubeService {
       processId: 'audio_${DateTime.now().millisecondsSinceEpoch}',
     );
 
+    activeDownloads[request.processId] = videoInfo!.title;
+    downloadProgress[request.processId] = 0.0;
+    downloadState[request.processId] = 'Starting...';
+
     final result = await youtubeDL.download(request);
 
-    print('STATUS: ${result.status}');
-    print('OUTPUT PATH: ${result.outputPath}');
-    print('ERROR: ${result.errorMessage}');
+    activeDownloads.remove(request.processId);
+    downloadProgress.remove(request.processId);
+    downloadState.remove(request.processId);
+    downloadError.remove(request.processId);
 
     if (result.status != OperationStatus.success) return null;
 
