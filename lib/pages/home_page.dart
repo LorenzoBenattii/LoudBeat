@@ -69,8 +69,19 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.fast_rewind),
+                        onPressed: () {
+                          audioService.goToPreviousSong();
+                          audioService.playNextSong();
+                        },
+                        icon: const Icon(Icons.fast_rewind)
+                      ),
+
+
+                      IconButton(
+                        onPressed: () {
+                          audioService.restartSong();
+                        },
+                        icon: const Icon(Icons.restart_alt),
                       ),
 
                       const SizedBox(width: 10),
@@ -98,7 +109,9 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 10),
 
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          audioService.playNextSong();
+                        },
                         icon: const Icon(Icons.fast_forward),
                       ),
                     ],

@@ -48,7 +48,7 @@ class Playlist {
   factory Playlist.fromMap(Map<String, Object?> map) {
     return Playlist(
       id: map["id"] as int,
-      name: map["name"] as String
+      name: map["name"] as String,
     );
   }
 }
@@ -63,7 +63,7 @@ Future<Database> getDatabase() async {
     version: 1,
 
     onConfigure: (db) async {
-      await db.execute('PRAGMA foreing_keys = ON');
+      await db.execute('PRAGMA foreign_keys = ON');
     },
 
     onCreate: (db, version) async {
@@ -89,6 +89,7 @@ Future<Database> getDatabase() async {
         CREATE TABLE playlist_songs (
           playlistId INTEGER NOT NULL,
           songId INTEGER NOT NULL,
+          position INTEGER NOT NULL,
 
           PRIMARY KEY (playlistId, songId),
 
@@ -262,6 +263,21 @@ Future<void> deleteSongFromPlaylist(Song song, Playlist playlist) async {
     where: "playlistId = ? AND songId = ?",
     whereArgs: [playlist.id, song.id]
   );
+}
+
+Future<List<Song>> getSongsFromPlaylist(Playlist playlist) async {
+  final db = await getDatabase();
+
+  final List<Map<String, Object?>> rows = await db.rawQuery('''
+    SELECT songs.*
+    FROM songs
+    INNER JOIN playlist_songs
+      ON songs.id = playlist_songs.songId
+    WHERE playlist_songs.playlistId = ?
+    ORDER BY playlist_songs.position
+  ''', [playlist.id]);
+
+  return rows.map((row) => Song.fromMap(row)).toList();
 }
 
 
