@@ -161,8 +161,9 @@ class _MainPageState extends State<MainPage> {
           IconButton(
             onPressed: () async {
               audioService.emptyQueue();
+              await audioService.player.stop();
               await audioService.shuffleQueue();
-              audioService.playNextSong();
+              await audioService.playNextSong();
 
               pageNavigationService.selectedPage.value = 0;
             },

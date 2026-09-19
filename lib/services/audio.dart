@@ -35,55 +35,80 @@ class AudioService {
 
     final Song song = queue[index];
 
+
     currentSong.value = song;
     currentAlbumCover.value = await getAlbumCover(song.filePath);
 
-    await player.setFilePath(song.filePath);
-    await player.setVolume(1.0);
-    await player.play();
+    try {
+      await player.setFilePath(song.filePath);
+      await player.setVolume(1.0);
+      await player.play();
+    } on PlayerInterruptedException {
+      print("Player load interrupted");
+    }
   }
 
   Future<void> playNextSong() async {
-    if (isChangingSong) return;
+    if (queue.isEmpty || isChangingSong) return;
 
     isChangingSong = true;
 
-    try {
+    if (index >= queue.length -1 ) {
+      index = 0;
+    } else {
       index++;
-
-      if (index >= queue.length) {
-        index = 0;
-      }
-
-      await _playCurrentSong();
-    } finally {
-      isChangingSong = false;
     }
+
+    final int requestedIndex = index;
+    isChangingSong = false;
+    await _playSong(requestedIndex);
   }
+
+  Future<void> _playSong(int requestedIndex) async {
+    if (requestedIndex <0 || requestedIndex >= queue.length) return;
+
+    final Song song = queue[requestedIndex];
+
+    currentSong.value = song;
+    currentAlbumCover.value = await getAlbumCover(song.filePath);
+
+    try {
+      await player.setFilePath(song.filePath);
+      await player.setVolume(1.0);
+
+      if (index != requestedIndex) return;
+      await player.play();
+    } on PlayerInterruptedException {
+      print("Song loading interrupted");
+    }
+
+  }
+    
 
   Future<void> goToPreviousSong() async {
-    if (isChangingSong) return;
-    if (queue.isEmpty) return;
+    if (queue.isEmpty || isChangingSong) return;
 
     isChangingSong = true;
 
-    try {
-      if (player.position > const Duration(seconds: 3)) {
-        await player.seek(Duration.zero);
-        return;
-      }
-
-      if (index <= 0) {
-        index = queue.length - 1;
-      } else {
-        index--;
-      }
-
-      await _playCurrentSong();
-    } finally {
+    if (player.position > const Duration(seconds: 3)) {
       isChangingSong = false;
+      await player.seek(Duration.zero);
+      return;
     }
+
+    if (index <= 0) {
+      index = queue.length -1;
+    } else {
+      index--;
+    }
+
+    final int requestedIndex = index;
+    isChangingSong = false;
+
+    await _playSong(requestedIndex);
   }
+
+
 
   Future<void> shuffleQueue() async {
     List<Song> songs = await getSongs();

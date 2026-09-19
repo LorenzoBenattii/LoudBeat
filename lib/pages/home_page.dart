@@ -71,7 +71,6 @@ class _HomePageState extends State<HomePage> {
                       IconButton(
                         onPressed: () {
                           audioService.goToPreviousSong();
-                          audioService.playNextSong();
                         },
                         icon: const Icon(Icons.fast_rewind)
                       ),
@@ -111,6 +110,8 @@ class _HomePageState extends State<HomePage> {
                       IconButton(
                         onPressed: () {
                           audioService.playNextSong();
+                          print("PRESSED");
+                          print(audioService.index);
                         },
                         icon: const Icon(Icons.fast_forward),
                       ),
