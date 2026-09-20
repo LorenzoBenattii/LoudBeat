@@ -4,7 +4,7 @@ import 'package:loud_beat/database/database_helper.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:loud_beat/services/audio.dart';
 import 'package:loud_beat/services/page_navigation.dart';
-import 'dart:io';
+
 
 class SongsPage extends StatefulWidget {
   const SongsPage({super.key});
@@ -81,9 +81,7 @@ class _SongsPageState extends State<SongsPage> {
 
 
                       audioService.emptyQueue();
-                      print(audioService.queue);
-                      await audioService.addToQueue(songs[index].id!);
-                      print(audioService.queue);
+                      await audioService.createQueueFromSongAllSongs(songs[index].id!);
                       audioService.playNextSong();
 
                       pageNavigationService.selectedPage.value = 0;

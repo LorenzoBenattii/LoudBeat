@@ -126,12 +126,18 @@ Future<void> resetDatabase() async {
 
 // ---- SONGS  ---- //
 
-Future<int> insertSong(Song song) async {
+Future<Song> insertSong(Song song) async {
   final db = await getDatabase();
 
-  return await db.insert(
-    "songs",
-    song.toMap(),
+  final id = await db.insert('songs', song.toMap());
+
+  return Song(
+    id: id,
+    title: song.title,
+    length: song.length,
+    author: song.author,
+    filePath: song.filePath,
+    videoId: song.videoId,
   );
 }
 
@@ -246,11 +252,20 @@ Future<void> deletePlaylist(Playlist playlist) async {
 Future<void> addSongToPlaylist(Song song, Playlist playlist) async {
   final db = await getDatabase();
 
+  final result = await db.rawQuery('''
+    SELECT MAX(position) AS maxPosition
+    FROM playlist_songs
+    WHERE playlistId = ?
+  ''', [playlist.id]);
+
+  final maxPosition = result.first['maxPosition'] as int?;
+
   await db.insert(
     'playlist_songs',
     {
       'playlistId': playlist.id,
       'songId': song.id,
+      'position': (maxPosition ?? -1) + 1,
     },
   );
 }
@@ -259,7 +274,7 @@ Future<void> deleteSongFromPlaylist(Song song, Playlist playlist) async {
   final db = await getDatabase();
 
   await db.delete(
-    "playlists_songs",
+    "playlist_songs",
     where: "playlistId = ? AND songId = ?",
     whereArgs: [playlist.id, song.id]
   );

@@ -6,11 +6,10 @@ import 'package:loud_beat/database/database_helper.dart';
 
 void main() {
 
-  /*
-  WidgetsFlutterBinding.ensureInitialized();
-
-  resetDatabase();
-  */
+  
+  //WidgetsFlutterBinding.ensureInitialized();
+  //resetDatabase();
+  
   
   runApp(const MyApp());
 }

@@ -1,4 +1,3 @@
-import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -108,9 +107,7 @@ class AudioService {
     await _playSong(requestedIndex);
   }
 
-
-
-  Future<void> shuffleQueue() async {
+  Future<void> shuffleQueueAllSongs() async {
     List<Song> songs = await getSongs();
 
     songs.shuffle();
@@ -118,6 +115,42 @@ class AudioService {
     queue = songs;
     index = -1;
   }
+
+  Future<void> shuffleQueuePlaylist(int playlistId) async {
+    Playlist? playlist = await getPlaylist(playlistId);
+    List<Song> songs = await getSongsFromPlaylist(playlist!);
+
+    songs.shuffle();
+    queue = songs;
+    index = -1;
+  }
+
+
+  Future<void> createQueueFromSongAllSongs(int songId) async {
+    Song? song = await getSong(songId);
+    List<Song> songs = await getSongs();
+
+    songs.shuffle();
+    songs.removeWhere((s) => s.id == song!.id);
+    songs.insert(0, song!);
+
+    queue = songs;
+    index = -1;
+  }
+
+  Future<void> createQueueFromSongPlaylist(int songId, int playlistId) async {
+    Song? song = await getSong(songId);
+    Playlist? playlist = await getPlaylist(playlistId);
+    List<Song> songs = await getSongsFromPlaylist(playlist!);
+
+    songs.shuffle();
+    songs.removeWhere((s) => s.id == song!.id);
+    songs.insert(0, song!);
+
+    queue = songs;
+    index = -1;
+  }
+
 
   Future<void> addToQueue(int songId) async {
     Song? song = await getSong(songId);
@@ -142,6 +175,8 @@ class AudioService {
     currentSong.value = null;
   
   }
+
+  
 
 }
 

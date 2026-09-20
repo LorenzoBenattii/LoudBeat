@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
+
 import 'package:loud_beat/database/database_helper.dart';
 
 import 'package:loud_beat/services/audio.dart';
