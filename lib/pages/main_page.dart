@@ -105,11 +105,18 @@ class _MainPageState extends State<MainPage> {
 
                     String? filePath;
                     Video? selectedVideo;
-
+                    bool isAlreadyDownloaded;
                     
                     for (final video in videos) {
                       if (video.videoId == null) continue;
 
+                      isAlreadyDownloaded = (await db.getSongFromVideoId(video.videoId!) != null); 
+
+                      if (isAlreadyDownloaded) {
+                        Navigator.of(context).pop();
+                        return;
+                      }
+                      
                       filePath = await yt.downloadSong(video.videoId!);
 
                       if (filePath != null) {
@@ -134,8 +141,6 @@ class _MainPageState extends State<MainPage> {
                     if (pageNavigationService.showPlaylistDetail.value) {
                       db.Playlist? playlist = await db.getPlaylist(pageNavigationService.selectedPlaylist.value!);
                       await db.addSongToPlaylist(insertedSong, playlist!);
-                      
-                      
                       pageNavigationService.refreshPlaylistLoaded();
                       
                     }
@@ -158,12 +163,11 @@ class _MainPageState extends State<MainPage> {
               }  else {
                 await audioService.shuffleQueueAllSongs();
               }
+              print("QUEUE LENGTH ${audioService.queue.length}");
               await audioService.playNextSong();
 
               pageNavigationService.selectedPage.value = 0;
 
-              
-              
             },
             icon: const Icon(Icons.shuffle_outlined),
             selectedIcon: const Icon(Icons.shuffle),

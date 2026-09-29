@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:loud_beat/services/youtube.dart';
@@ -160,6 +161,22 @@ Future<Song?> getSong(int songId) async {
     "songs",
     where: "id = ?",
     whereArgs: [songId]
+  );
+
+  if (songMaps.isEmpty) return null;
+
+  final map = songMaps.first;
+
+  return Song.fromMap(map);
+}
+
+Future<Song?> getSongFromVideoId(String videoId) async {
+  final db = await getDatabase();
+
+  final List<Map<String, Object?>> songMaps = await db.query(
+    "songs",
+    where: "videoId = ?",
+    whereArgs: [videoId]
   );
 
   if (songMaps.isEmpty) return null;
