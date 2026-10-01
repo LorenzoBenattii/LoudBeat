@@ -2,11 +2,12 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="loud_beat"
+        android:label="LoudBeat"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
+            android:label="LoudBeat"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""

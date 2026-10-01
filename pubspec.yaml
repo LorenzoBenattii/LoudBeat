@@ -22,14 +22,19 @@ dependencies:
   flutter_slidable: ^4.0.3
   just_audio: ^0.10.6
   audio_metadata_reader: ^1.8.0
+  audio_service: ^0.18.19
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-
+  flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/loudbeat.png"
+
 
 flutter:
   uses-material-design: true

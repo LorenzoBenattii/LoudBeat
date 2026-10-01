@@ -1,18 +1,31 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:loud_beat/services/audio_handler.dart';
 import 'pages/main_page.dart';
 import 'package:loud_beat/database/database_helper.dart';
 
+late AudioHandler _audioHandler;
 
+Future<void> main() async {
 
-void main() {
+  WidgetsFlutterBinding.ensureInitialized();
 
+  _audioHandler = await AudioService.init(
+    builder: () => AudioHandlerService(),
+    config: AudioServiceConfig(
+      androidNotificationChannelId: "com.example.loud_beat.channel.audio",
+      androidNotificationChannelName: "Music playback"
+    )
+  );
   
-  //WidgetsFlutterBinding.ensureInitialized();
+  
   //resetDatabase();
   
   
   runApp(const MyApp());
 }
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -21,7 +34,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'LoudBeat',
       theme: ThemeData(
         scaffoldBackgroundColor: Color(0xFFF5F5DC), // Beige
         colorScheme: ColorScheme.light(
