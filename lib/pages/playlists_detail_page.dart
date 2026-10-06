@@ -85,29 +85,15 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: ListTile(
                     onTap: () async {
-  print("1 - SONG PRESSED");
-  
-  audioService.emptyQueue();
+                      audioService.emptyQueue();
 
-  print("2 - BEFORE CREATE QUEUE");
+                      await audioService.createQueueFromSongPlaylist(
+                        songs[index].id!,
+                        pageNavigationService.selectedPlaylist.value!,
+                      );
 
-  await audioService.createQueueFromSongPlaylist(
-    songs[index].id!,
-    pageNavigationService.selectedPlaylist.value!,
-  );
-
-  print("3 - AFTER CREATE QUEUE");
-
-  for (Song song in audioService.queue) {
-    print("SONG: ${song.title}");
-  }
-
-  print("4 - BEFORE PLAY");
-  
-  audioService.playNextSong();
-
-  print("5 - AFTER PLAY");
-},
+                      audioService.playNextSong();
+                    },
                     title: Text(songs[index].title,
                     style: const TextStyle(
                       fontWeight: FontWeight.w500

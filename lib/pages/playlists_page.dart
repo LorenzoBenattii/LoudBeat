@@ -69,6 +69,15 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                     onTap: () {
                       widget.onPlaylistSelected(playlists[index].id!);
                     },
+                    onLongPress: () async {
+                      final newname = await userPromptService.askText(context, "Enter New Playlist Name:");
+
+                      if (newname.isEmpty) return;
+
+                      await updatePlaylistName(playlists[index], newname);
+                      await loadPlaylists();
+
+                    },
                     title: Text(playlists[index].name,
                     style: const TextStyle(
                       fontWeight: FontWeight.w500
